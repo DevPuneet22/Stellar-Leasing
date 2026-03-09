@@ -9,9 +9,34 @@ This repository now includes:
 - `backend/StellarLeasing.sln` with `Domain`, `Application`, `Infrastructure`, `Api`, and `Worker` projects
 - starter API endpoints for system health and workflow definitions
 - a background worker shell for reminders and escalations
+- EF Core foundation with a `DbContext` and workflow entity mappings
 - `frontend/` with a Vite + React + TypeScript app shell
 - `docs/` with MVP, domain model, schema, API, and milestone notes
 - `docker/docker-compose.yml` for local PostgreSQL
+
+## Current Status
+
+Completed so far:
+
+- workflow domain model scaffold
+- starter API and worker projects
+- frontend shell
+- PostgreSQL Docker setup
+- EF Core-ready workflow entities
+- `StellarLeasingDbContext`
+- EF Core configuration classes for workflow entities
+
+Not completed yet:
+
+- `DbContext` registration in dependency injection
+- PostgreSQL-backed repository implementation
+- EF Core migration creation and database update
+- auth, tenant isolation, roles, and teams
+- workflow runtime and task inbox
+
+If you want the repo-specific execution order, use:
+
+- `README-FIRST-STEPS.md`
 
 ## How To Start Locally
 
@@ -589,7 +614,9 @@ This is a Qntrl-aligned implementation strategy based on publicly documented cap
 
 The scaffold is in place. The next implementation steps should be:
 
-- replace the in-memory workflow repository with `EF Core + PostgreSQL`
+- register `DbContext` with `UseNpgsql(...)`
+- replace the in-memory workflow repository with a PostgreSQL-backed repository
+- create the first EF Core migration and update the database
 - add auth, tenant isolation, roles, and teams
 - build workflow definition CRUD in the frontend before the visual builder
 - add runtime process instances and task inbox flows
