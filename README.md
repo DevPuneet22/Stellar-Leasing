@@ -2,6 +2,93 @@
 
 This repository is the starting point for a workflow automation product inspired by Qntrl. The goal is to let businesses define workflows, assign tasks, approve/reject steps, track SLAs, and keep a full audit trail.
 
+## Current Scaffold
+
+This repository now includes:
+
+- `backend/StellarLeasing.sln` with `Domain`, `Application`, `Infrastructure`, `Api`, and `Worker` projects
+- starter API endpoints for system health and workflow definitions
+- a background worker shell for reminders and escalations
+- `frontend/` with a Vite + React + TypeScript app shell
+- `docs/` with MVP, domain model, schema, API, and milestone notes
+- `docker/docker-compose.yml` for local PostgreSQL
+
+## How To Start Locally
+
+Open PowerShell in:
+
+```powershell
+C:\Users\PuneetGupta\Desktop\Stellar-Leasing
+```
+
+### Prerequisites
+
+Make sure these are installed and running:
+
+- `.NET SDK 10`
+- `Node.js`
+- `npm`
+- `Docker Desktop`
+
+### First-Time Setup
+
+Install frontend dependencies once:
+
+```powershell
+cd frontend
+npm install
+cd ..
+```
+
+### 1. Start PostgreSQL
+
+```powershell
+docker compose -f docker/docker-compose.yml up -d
+```
+
+### 2. Start the API
+
+Open a new terminal in the repo root and run:
+
+```powershell
+dotnet run --project backend/src/StellarLeasing.Api/StellarLeasing.Api.csproj
+```
+
+### 3. Start the worker
+
+Open another terminal in the repo root and run:
+
+```powershell
+dotnet run --project backend/src/StellarLeasing.Worker/StellarLeasing.Worker.csproj
+```
+
+### 4. Start the frontend
+
+Open another terminal and run:
+
+```powershell
+cd frontend
+npm run dev
+```
+
+### URLs To Check
+
+- frontend: `http://localhost:5173`
+- API health: `http://localhost:5080/api/system/health`
+- workflow definitions API: `http://localhost:5080/api/workflow-definitions`
+
+### Stop Everything
+
+To stop PostgreSQL:
+
+```powershell
+docker compose -f docker/docker-compose.yml down
+```
+
+To stop API, worker, or frontend:
+
+- press `Ctrl + C` in each terminal
+
 ## Product Goal
 
 Build a SaaS-style workflow platform where an admin can:
@@ -500,13 +587,17 @@ This is a Qntrl-aligned implementation strategy based on publicly documented cap
 
 ## Next Recommended Action
 
-The first file you should create after this README is:
+The scaffold is in place. The next implementation steps should be:
+
+- replace the in-memory workflow repository with `EF Core + PostgreSQL`
+- add auth, tenant isolation, roles, and teams
+- build workflow definition CRUD in the frontend before the visual builder
+- add runtime process instances and task inbox flows
+
+Use these files first:
 
 - `docs/prd.md`
-
-Then create:
-
 - `docs/domain-model.md`
 - `docs/workflow-schema.md`
-
-After that, start the backend and frontend skeleton.
+- `backend/src/StellarLeasing.Api/Program.cs`
+- `frontend/src/app/App.tsx`

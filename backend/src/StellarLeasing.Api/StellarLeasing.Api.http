@@ -1,0 +1,21 @@
+@StellarLeasing.Api_HostAddress = http://localhost:5080
+
+GET {{StellarLeasing.Api_HostAddress}}/api/system/health
+Accept: application/json
+
+###
+
+GET {{StellarLeasing.Api_HostAddress}}/api/workflow-definitions
+Accept: application/json
+
+###
+
+POST {{StellarLeasing.Api_HostAddress}}/api/workflow-definitions
+Content-Type: application/json
+
+{
+  "name": "Vendor Onboarding",
+  "code": "VENDOR-ONBOARDING"
+}
+
+###

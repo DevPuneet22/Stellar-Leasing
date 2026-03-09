@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StellarLeasing.Api/StellarLeasing.Api.csproj" />
+    <Project Path="src/StellarLeasing.Application/StellarLeasing.Application.csproj" />
+    <Project Path="src/StellarLeasing.Domain/StellarLeasing.Domain.csproj" />
+    <Project Path="src/StellarLeasing.Infrastructure/StellarLeasing.Infrastructure.csproj" />
+    <Project Path="src/StellarLeasing.Worker/StellarLeasing.Worker.csproj" />
+  </Folder>
+</Solution>
