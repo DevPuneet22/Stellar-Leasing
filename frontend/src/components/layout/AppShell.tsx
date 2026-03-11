@@ -1,13 +1,16 @@
 import type { PropsWithChildren } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../features/auth/AuthContext";
 
 const links = [
   { to: "/", label: "Dashboard" },
-  { to: "/builder", label: "Builder" },
+  { to: "/workflows", label: "Workflows" },
   { to: "/docs", label: "Docs" },
 ];
 
 export function AppShell({ children }: PropsWithChildren) {
+  const { session, signOut } = useAuth();
+
   return (
     <div className="shell">
       <aside className="shell__sidebar">
@@ -32,6 +35,20 @@ export function AppShell({ children }: PropsWithChildren) {
             </NavLink>
           ))}
         </nav>
+
+        {session ? (
+          <div className="shell__account">
+            <div>
+              <strong>{session.displayName}</strong>
+              <div className="shell__account-meta">
+                {session.role} · {session.email}
+              </div>
+            </div>
+            <button className="button button--secondary" onClick={signOut} type="button">
+              Sign out
+            </button>
+          </div>
+        ) : null}
       </aside>
 
       <main className="shell__content">{children}</main>
