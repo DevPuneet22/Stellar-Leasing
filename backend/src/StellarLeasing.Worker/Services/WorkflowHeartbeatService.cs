@@ -23,11 +23,25 @@ public sealed class WorkflowHeartbeatService : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var definitions = await _workflowDefinitionService.ListAsync(stoppingToken);
-            _logger.LogInformation(
-                "Workflow worker heartbeat at {UtcNow}. Registered workflow definitions: {Count}.",
-                DateTimeOffset.UtcNow,
-                definitions.Count);
+            try
+            {
+                var definitions = await _workflowDefinitionService.ListAsync(stoppingToken);
+                _logger.LogInformation(
+                    "Workflow worker heartbeat at {UtcNow}. Registered workflow definitions: {Count}.",
+                    DateTimeOffset.UtcNow,
+                    definitions.Count);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Workflow worker heartbeat skipped at {UtcNow} because the workflow catalog could not be queried.",
+                    DateTimeOffset.UtcNow);
+            }
 
             await timer.WaitForNextTickAsync(stoppingToken);
         }

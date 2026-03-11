@@ -25,5 +25,8 @@ public sealed class WorkflowTransitionConfiguration : IEntityTypeConfiguration<W
 
         builder.Property(x => x.ConditionName)
             .HasMaxLength(100);
+
+        builder.Property(x => x.SortOrder)
+            .IsRequired();
     }
 }

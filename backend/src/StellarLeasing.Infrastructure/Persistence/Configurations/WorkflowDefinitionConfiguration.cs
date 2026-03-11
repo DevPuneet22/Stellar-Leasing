@@ -22,6 +22,10 @@ public sealed class WorkflowDefinitionConfiguration : IEntityTypeConfiguration<W
         builder.Property(x => x.Code)
             .IsRequired()
             .HasMaxLength(100);
+
+        builder.Property(x => x.Revision)
+            .IsRequired()
+            .IsConcurrencyToken();
         
         builder.HasIndex(x => new { x.TenantId, x.Code })
             .IsUnique();

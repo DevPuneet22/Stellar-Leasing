@@ -30,5 +30,17 @@ public sealed class WorkflowStepConfiguration : IEntityTypeConfiguration<Workflo
 
         builder.Property(x => x.AssigneeRule)
             .HasMaxLength(200);
+
+        builder.Property(x => x.SortOrder)
+            .IsRequired();
+
+        builder.Property(x => x.PositionX)
+            .IsRequired();
+
+        builder.Property(x => x.PositionY)
+            .IsRequired();
+
+        builder.HasIndex("WorkflowVersionId", nameof(WorkflowStep.Key))
+            .IsUnique();
     }
 }

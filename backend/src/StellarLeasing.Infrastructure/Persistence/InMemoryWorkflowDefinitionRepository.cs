@@ -17,20 +17,48 @@ public sealed class InMemoryWorkflowDefinitionRepository : IWorkflowDefinitionRe
         ];
     }
 
-    public Task<IReadOnlyCollection<WorkflowDefinition>> ListAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<WorkflowDefinition>> ListAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
     {
         lock (_sync)
         {
-            return Task.FromResult<IReadOnlyCollection<WorkflowDefinition>>(_definitions.ToArray());
+            return Task.FromResult<IReadOnlyCollection<WorkflowDefinition>>(
+                _definitions.Where(definition => definition.TenantId == tenantId).ToArray());
         }
     }
 
-    public Task<bool> ExistsByCodeAsync(Guid tenantId, string code, CancellationToken cancellationToken = default)
+    public Task<WorkflowDefinition?> GetByIdAsync(
+        Guid tenantId,
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        lock (_sync)
+        {
+            return Task.FromResult(
+                _definitions.SingleOrDefault(definition => definition.TenantId == tenantId && definition.Id == id));
+        }
+    }
+
+    public Task<WorkflowDefinition?> GetForUpdateAsync(
+        Guid tenantId,
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return GetByIdAsync(tenantId, id, cancellationToken);
+    }
+
+    public Task<bool> ExistsByCodeAsync(
+        Guid tenantId,
+        string code,
+        Guid? excludingDefinitionId = null,
+        CancellationToken cancellationToken = default)
     {
         lock (_sync)
         {
             var exists = _definitions.Any(definition =>
                 definition.TenantId == tenantId &&
+                (!excludingDefinitionId.HasValue || definition.Id != excludingDefinitionId.Value) &&
                 string.Equals(definition.Code, code, StringComparison.OrdinalIgnoreCase));
 
             return Task.FromResult(exists);
@@ -44,6 +72,25 @@ public sealed class InMemoryWorkflowDefinitionRepository : IWorkflowDefinitionRe
             _definitions.Add(definition);
         }
 
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateDraftAsync(
+        WorkflowDefinition definition,
+        IReadOnlyCollection<Guid> previousStepIds,
+        IReadOnlyCollection<Guid> previousTransitionIds,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task AddDraftVersionAsync(WorkflowDefinition definition, CancellationToken cancellationToken = default)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateAsync(WorkflowDefinition definition, CancellationToken cancellationToken = default)
+    {
         return Task.CompletedTask;
     }
 

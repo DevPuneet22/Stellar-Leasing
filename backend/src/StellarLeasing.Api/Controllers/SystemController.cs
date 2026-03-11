@@ -26,9 +26,9 @@ public sealed class SystemController : ControllerBase
             architecture = "modular monolith",
             nextMilestones = new[]
             {
-                "Replace in-memory infrastructure with EF Core + PostgreSQL",
-                "Add authentication and tenant isolation",
-                "Implement workflow version editor and runtime execution"
+                "Add process runtime, task inbox, and approvals",
+                "Add audit trail, comments, attachments, and reminders",
+                "Replace local demo auth with provider-backed SSO and RBAC"
             }
         });
     }

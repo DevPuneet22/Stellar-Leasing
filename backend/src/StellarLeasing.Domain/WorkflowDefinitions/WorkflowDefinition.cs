@@ -14,6 +14,7 @@ public sealed class WorkflowDefinition : Entity
         TenantId = tenantId;
         Name = name;
         Code = code;
+        Revision = 0;
     }
 
     public Guid TenantId { get; private set; }
@@ -22,18 +23,25 @@ public sealed class WorkflowDefinition : Entity
 
     public string Code { get; private set; } = null!;
 
+    public int Revision { get; private set; }
+
     public IReadOnlyCollection<WorkflowVersion> Versions => _versions.AsReadOnly();
 
     public WorkflowVersion? ActiveVersion => _versions.SingleOrDefault(version => version.Status == WorkflowVersionStatus.Active);
 
+    public WorkflowVersion? DraftVersion => _versions
+        .Where(version => version.Status == WorkflowVersionStatus.Draft)
+        .OrderByDescending(version => version.VersionNumber)
+        .FirstOrDefault();
+
     public static WorkflowDefinition Create(Guid tenantId, string name, string? code = null)
     {
-        var normalizedName = name.Trim();
-        if (string.IsNullOrWhiteSpace(normalizedName))
+        if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Workflow name is required.", nameof(name));
         }
 
+        var normalizedName = name.Trim();
         var normalizedCode = NormalizeCode(code, normalizedName);
         var definition = new WorkflowDefinition(tenantId, normalizedName, normalizedCode);
         definition.AddDraftVersion();
@@ -42,15 +50,28 @@ public sealed class WorkflowDefinition : Entity
 
     public WorkflowVersion AddDraftVersion()
     {
+        if (DraftVersion is not null)
+        {
+            throw new InvalidOperationException("A draft version already exists for this workflow definition.");
+        }
+
         var nextVersionNumber = _versions.Count == 0 ? 1 : _versions.Max(version => version.VersionNumber) + 1;
-        var version = WorkflowVersion.CreateDraft(nextVersionNumber, BuildStarterSteps(), BuildStarterTransitions());
+        var version = _versions.Count == 0
+            ? WorkflowVersion.CreateDraft(nextVersionNumber, BuildStarterSteps(), BuildStarterTransitions())
+            : _versions
+                .OrderByDescending(existingVersion => existingVersion.VersionNumber)
+                .First()
+                .CreateNextDraft(nextVersionNumber);
+
         _versions.Add(version);
+        Touch();
         return version;
     }
 
     public void ActivateVersion(int versionNumber)
     {
-        var targetVersion = _versions.Single(version => version.VersionNumber == versionNumber);
+        var targetVersion = _versions.SingleOrDefault(version => version.VersionNumber == versionNumber)
+            ?? throw new InvalidOperationException($"Workflow version '{versionNumber}' was not found.");
 
         foreach (var version in _versions.Where(version => version.Status == WorkflowVersionStatus.Active))
         {
@@ -58,6 +79,33 @@ public sealed class WorkflowDefinition : Entity
         }
 
         targetVersion.Activate();
+        Touch();
+    }
+
+    public void Rename(string name, string? code = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Workflow name is required.", nameof(name));
+        }
+
+        var normalizedName = name.Trim();
+        Name = normalizedName;
+        Code = NormalizeCode(code, normalizedName);
+    }
+
+    public void UpdateDraftVersion(IEnumerable<WorkflowStep> steps, IEnumerable<WorkflowTransition> transitions)
+    {
+        var draftVersion = DraftVersion
+            ?? throw new InvalidOperationException("Create a draft version before editing this workflow.");
+
+        draftVersion.UpdateDraft(steps, transitions);
+        Touch();
+    }
+
+    private void Touch()
+    {
+        Revision += 1;
     }
 
     private static string NormalizeCode(string? code, string fallbackName)
@@ -72,10 +120,24 @@ public sealed class WorkflowDefinition : Entity
     {
         return
         [
-            new WorkflowStep("start", "Start", WorkflowStepType.Start),
-            new WorkflowStep("manager-review", "Manager Review", WorkflowStepType.Approval, "role:manager"),
-            new WorkflowStep("operations-check", "Operations Check", WorkflowStepType.Task, "team:operations"),
-            new WorkflowStep("complete", "Complete", WorkflowStepType.End)
+            new WorkflowStep("start", "Start", WorkflowStepType.Start, sortOrder: 0, positionX: 80, positionY: 160),
+            new WorkflowStep(
+                "manager-review",
+                "Manager Review",
+                WorkflowStepType.Approval,
+                "role:manager",
+                1,
+                360,
+                160),
+            new WorkflowStep(
+                "operations-check",
+                "Operations Check",
+                WorkflowStepType.Task,
+                "team:operations",
+                2,
+                660,
+                160),
+            new WorkflowStep("complete", "Complete", WorkflowStepType.End, sortOrder: 3, positionX: 940, positionY: 160)
         ];
     }
 
@@ -83,9 +145,9 @@ public sealed class WorkflowDefinition : Entity
     {
         return
         [
-            new WorkflowTransition("start", "manager-review"),
-            new WorkflowTransition("manager-review", "operations-check", "approved"),
-            new WorkflowTransition("operations-check", "complete")
+            new WorkflowTransition("start", "manager-review", sortOrder: 0),
+            new WorkflowTransition("manager-review", "operations-check", "approved", 1),
+            new WorkflowTransition("operations-check", "complete", sortOrder: 2)
         ];
     }
 }
